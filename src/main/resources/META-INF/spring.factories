@@ -1,1 +1,1 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=org.springframework.cloud.stream.source.config.StarterAutoConfiguration
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=org.springframework.cloud.stream.source.config.SourceAutoConfiguration

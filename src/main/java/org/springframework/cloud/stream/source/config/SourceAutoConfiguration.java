@@ -13,40 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.springframework.cloud.stream.source;
-
-import static org.junit.Assert.assertTrue;
+package org.springframework.cloud.stream.source.config;
 
 import java.util.function.Function;
 
-import org.junit.Test;
-import org.springframework.boot.SpringApplication;
-import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.cloud.stream.annotation.EnableBinding;
+import org.springframework.cloud.stream.messaging.Source;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.integration.transformer.MethodInvokingTransformer;
 import org.springframework.integration.transformer.Transformer;
+import org.springframework.lang.Nullable;
+import org.springframework.util.ReflectionUtils;
 
 /**
  * 
  * @author Oleg Zhurakousky
  *
  */
-public class StreamSourceStarterApplicationTests {
+@Configuration
+@EnableBinding(Source.class)
+public class SourceAutoConfiguration {
+	
+	public static final String SOURCE_OUTPUT = "sourceOutput";
 
-	@Test
-	public void injectedTransformer() {
-		ConfigurableApplicationContext context = SpringApplication.run(new Class[] {StreamSourceStarterApplication.class, TestConfig.class}, new String[] {});
-		Transformer transformer = context.getBean(Transformer.class);
-		assertTrue(transformer instanceof MethodInvokingTransformer);
-	}
-
-	@Configuration
-	public static class TestConfig {	
-		@Bean
-		Function<String, Integer> injectedFunction() {
-			return (p) -> Integer.parseInt(p);
-		}
+	@Bean
+	@ServiceActivator(inputChannel=SOURCE_OUTPUT, outputChannel=Source.OUTPUT)
+	public <I,O> Transformer handler(@Nullable Function<I, O> sourceProcessor) {
+		return sourceProcessor == null 
+				? (m) -> m 
+				: new MethodInvokingTransformer(sourceProcessor, ReflectionUtils.findMethod(Function.class, "apply", Object.class));
 	}
 }
